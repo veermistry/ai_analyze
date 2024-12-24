@@ -1,4 +1,4 @@
-# Flask Data Processing Application
+# AI-Automated Data Processing Application
 
 This Flask application allows users to upload datasets, process them through multiple phases (data cleaning, feature engineering, and data exploration) using LangChain, and download the results at each stage. 
 IN PROGRESS: It will soon provide a user-friendly interface for interacting with the data processing pipeline and offers visualization and structured data exploration.
