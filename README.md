@@ -1,127 +1,99 @@
 # AI-Automated Data Processing Application
 
-This Flask application allows users to upload datasets, process them through multiple phases (data cleaning, feature engineering, and data exploration) using LangChain, and download the results at each stage. 
-IN PROGRESS: It will soon provide a user-friendly interface for interacting with the data processing pipeline and offers visualization and structured data exploration.
+This project provides a web-based dashboard for uploading, cleaning, feature engineering, exploring, and downloading CSV data files. The system consists of a Flask-based backend for handling file uploads and processing, and a React frontend for user interaction.
 
-## Features
+## Backend Overview (Flask)
+The backend is built using Flask, with the following features:
+- **File Upload**: Allows users to upload CSV files.
+- **Data Cleaning**: Cleans missing values using different strategies (mean, median, mode, etc.).
+- **Feature Engineering**: Uses LangChain agents to perform feature engineering (e.g., encoding categorical variables and generating new features).
+- **Data Exploration**: Generates histograms, correlation matrices, and pairplots to visualize data.
+- **File Download**: Allows users to download cleaned or processed files.
 
-### 1. Upload Dataset
-- Users can upload datasets in CSV format.
-- The uploaded dataset is stored for further processing.
+### API Endpoints
+1. **POST /upload**: Uploads a CSV file.
+   - Request: `multipart/form-data` with a file.
+   - Response: A success message and the file path.
+   
+2. **POST /clean**: Cleans the uploaded data by handling missing values.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the cleaned file path.
 
-### 2. Data Cleaning
-- Handles missing values by:
-  - Imputing categorical columns with the mode.
-  - Imputing numerical columns based on skewness:
-    - Mean for normally distributed data.
-    - Median for skewed data.
-- Saves the cleaned dataset for download.
+3. **POST /feature_engineering**: Performs feature engineering on the cleaned data.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the file path for feature-engineered data.
 
-### 3. Feature Engineering
-- Encodes categorical columns.
-- Generates new meaningful features (e.g., interaction terms, age groups).
-- Saves the updated dataset for download.
+4. **POST /explore**: Explores the data by generating histograms, correlation matrices, and pairplots.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the generated plots.
 
-### 4. Data Exploration
-- Provides visualizations, including:
-  - Histograms for numerical columns.
-  - Correlation matrix heatmaps.
-  - Pairplots for numerical features.
-  - Boxplots for identifying outliers.
-  - Heatmaps of missing values.
-  - Bar plots for categorical features.
-- Allows users to download the visualization results.
+5. **GET /download**: Downloads a processed file (cleaned, feature-engineered, or explored data).
+   - Request: Query parameter `file_path`.
+   - Response: The requested file.
 
-### 5. API Routes
-The application provides the following API routes:
-
-#### `/upload`
-- **Method**: `POST`
-- **Description**: Upload a dataset in CSV format.
-- **Response**: Confirms the successful upload of the dataset.
-
-#### `/clean`
-- **Method**: `POST`
-- **Description**: Cleans the uploaded dataset by handling missing values.
-- **Response**: Returns the cleaned dataset as a downloadable file.
-
-#### `/feature-engineer`
-- **Method**: `POST`
-- **Description**: Performs feature engineering on the cleaned dataset.
-- **Response**: Returns the updated dataset as a downloadable file.
-
-#### `/explore`
-- **Method**: `GET`
-- **Description**: Generates visualizations for data exploration.
-- **Response**: Returns downloadable visualization files.
-
-#### `/download/<phase>`
-- **Method**: `GET`
-- **Description**: Allows users to download the dataset for a specific phase (`cleaned`, `featured`, etc.).
-- **Response**: Provides the requested dataset as a downloadable file.
-
-## Requirements
-- Python 3.8+
-- Flask
-- LangChain
-- Pandas
-- NumPy
-- Seaborn
-- Matplotlib
-- Scipy
-
-## Setup
-
-1. Clone the repository:
-   ```bash
-   git clone <repository_url>
-   cd <repository_folder>
-   ```
-
-2. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
+### Setup
+1. Clone this repository.
+2. Install required Python packages:
    ```bash
    pip install -r requirements.txt
    ```
-
-4. Set up environment variables (e.g., OpenAI API key):
-   - Create a `.env` file:
-     ```env
-     OPENAI_API_KEY=your_openai_api_key
-     ```
-
-5. Run the application:
+3. Set up environment variables in a `.env` file:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+4. Run the backend:
    ```bash
-   flask run
+   python app.py
    ```
 
-6. Open the application in your browser:
-   - Navigate to `http://127.0.0.1:5000`
+## Frontend Overview (React)
+The frontend is a React app that interacts with the Flask backend. It allows users to:
+- Upload CSV files.
+- View the status of data processing (file upload, cleaning, feature engineering, and exploration).
+- Download the processed files.
+- View data plots (histograms, correlation matrices, and pairplots).
+
+### Features:
+- **File Upload**: Select and upload CSV files.
+- **Processing Status**: Shows the current processing step with an animated message.
+- **Download Files**: Download the processed data files and view generated plots.
+- **Error Handling**: Displays error messages if any step fails.
+
+### Setup
+1. Clone this repository.
+2. Install required npm packages:
+   ```bash
+   npm install
+   ```
+3. Run the frontend:
+   ```bash
+   npm start
+   ```
 
 ## Usage
-
-- Navigate through the web interface or use API routes via tools like Postman or cURL.
-- Upload your dataset, process it through the pipeline, and download the results at each stage.
+1. Open the frontend in a browser.
+2. Upload a CSV file to begin processing.
+3. The app will display progress messages while performing data cleaning, feature engineering, and exploration.
+4. Once completed, you can download the processed files and view the generated plots.
 
 ## Example Workflow
+1. **Upload File**: The user uploads a CSV file.
+2. **Data Cleaning**: The backend processes the file and cleans missing data.
+3. **Feature Engineering**: New features are created using LangChain agents.
+4. **Data Exploration**: Visualizations such as histograms, correlation matrices, and pairplots are generated.
+5. **Download**: The user can download the cleaned, feature-engineered data or view the plots.
 
-1. Upload a dataset to `/upload`.
-2. Clean the data by sending a request to `/clean`.
-3. Perform feature engineering via `/feature-engineer`.
-4. Generate visualizations using `/explore`.
-5. Download processed datasets and visualizations from `/download/<phase>`.
+## Dependencies
 
-## Future Enhancements
-- Add database integration (e.g., SQLite, PostgreSQL) for storing datasets and processing metadata.
-- Implement real-time progress tracking for processing tasks.
-- Support additional file formats (e.g., Excel, JSON).
-- Include user authentication for secure dataset handling.
+- Flask
+- Flask-CORS
+- Pandas
+- Seaborn
+- Matplotlib
+- LangChain
+- OpenAI API
+- React
+- Axios
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
