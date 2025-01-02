@@ -1,70 +1,99 @@
-# Getting Started with Create React App
+# Data Processing Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project provides a web-based dashboard for uploading, cleaning, feature engineering, exploring, and downloading CSV data files. The system consists of a Flask-based backend for handling file uploads and processing, and a React frontend for user interaction.
 
-## Available Scripts
+## Backend Overview (Flask)
+The backend is built using Flask, with the following features:
+- **File Upload**: Allows users to upload CSV files.
+- **Data Cleaning**: Cleans missing values using different strategies (mean, median, mode, etc.).
+- **Feature Engineering**: Uses LangChain agents to perform feature engineering (e.g., encoding categorical variables and generating new features).
+- **Data Exploration**: Generates histograms, correlation matrices, and pairplots to visualize data.
+- **File Download**: Allows users to download cleaned or processed files.
 
-In the project directory, you can run:
+### API Endpoints
+1. **POST /upload**: Uploads a CSV file.
+   - Request: `multipart/form-data` with a file.
+   - Response: A success message and the file path.
+   
+2. **POST /clean**: Cleans the uploaded data by handling missing values.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the cleaned file path.
 
-### `npm start`
+3. **POST /feature_engineering**: Performs feature engineering on the cleaned data.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the file path for feature-engineered data.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4. **POST /explore**: Explores the data by generating histograms, correlation matrices, and pairplots.
+   - Request: JSON with `file_path`.
+   - Response: A success message and the generated plots.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+5. **GET /download**: Downloads a processed file (cleaned, feature-engineered, or explored data).
+   - Request: Query parameter `file_path`.
+   - Response: The requested file.
 
-### `npm test`
+### Setup
+1. Clone this repository.
+2. Install required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set up environment variables in a `.env` file:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+4. Run the backend:
+   ```bash
+   python app.py
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Frontend Overview (React)
+The frontend is a React app that interacts with the Flask backend. It allows users to:
+- Upload CSV files.
+- View the status of data processing (file upload, cleaning, feature engineering, and exploration).
+- Download the processed files.
+- View data plots (histograms, correlation matrices, and pairplots).
 
-### `npm run build`
+### Features:
+- **File Upload**: Select and upload CSV files.
+- **Processing Status**: Shows the current processing step with an animated message.
+- **Download Files**: Download the processed data files and view generated plots.
+- **Error Handling**: Displays error messages if any step fails.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Setup
+1. Clone this repository.
+2. Install required npm packages:
+   ```bash
+   npm install
+   ```
+3. Run the frontend:
+   ```bash
+   npm start
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Usage
+1. Open the frontend in a browser.
+2. Upload a CSV file to begin processing.
+3. The app will display progress messages while performing data cleaning, feature engineering, and exploration.
+4. Once completed, you can download the processed files and view the generated plots.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Example Workflow
+1. **Upload File**: The user uploads a CSV file.
+2. **Data Cleaning**: The backend processes the file and cleans missing data.
+3. **Feature Engineering**: New features are created using LangChain agents.
+4. **Data Exploration**: Visualizations such as histograms, correlation matrices, and pairplots are generated.
+5. **Download**: The user can download the cleaned, feature-engineered data or view the plots.
 
-### `npm run eject`
+## Dependencies
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Flask
+- Flask-CORS
+- Pandas
+- Seaborn
+- Matplotlib
+- LangChain
+- OpenAI API
+- React
+- Axios
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
