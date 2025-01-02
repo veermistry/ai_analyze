@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from io import BytesIO
 import seaborn as sns
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import json
 from dotenv import load_dotenv
@@ -14,6 +17,7 @@ from scipy.stats import skew
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)
 
 # Configure upload folder
 UPLOAD_FOLDER = './uploads'
@@ -29,6 +33,7 @@ os.environ['OPENAI_API_KEY'] = api_key
 model = 'gpt-4o-mini'
 llm = ChatOpenAI(model_name=model, temperature=0)
 
+#LangChain Agent
 def create_dynamic_dataframe_agent(df):
     return create_pandas_dataframe_agent(
         llm, 
@@ -39,20 +44,27 @@ def create_dynamic_dataframe_agent(df):
         allow_dangerous_code=True
     )
 
+#Data Cleaning
 def handle_missing_values(df):
     df = df.copy()
     for column in df.columns:
-        if df[column].dtype == "object" or df[column].dtype.name == "category":
-            mode_value = df[column].mode()[0] if not df[column].mode().empty else None
-            df[column].fillna(mode_value, inplace=True)
-        elif pd.api.types.is_numeric_dtype(df[column]):
-            column_skew = skew(df[column].dropna(), nan_policy='omit')
-            if -0.5 <= column_skew <= 0.5:
-                df[column].fillna(df[column].mean(), inplace=True)
-            else:
-                df[column].fillna(df[column].median(), inplace=True)
+        missing_ratio = df[column].isnull().mean()
+        if missing_ratio < 0.6:
+            if df[column].dtype == "object" or df[column].dtype.name == "category":
+                mode_value = df[column].mode()[0] if not df[column].mode().empty else None
+                df[column].fillna(mode_value, inplace=True)
+            elif pd.api.types.is_numeric_dtype(df[column]):
+                column_skew = skew(df[column].dropna(), nan_policy='omit')
+                if -0.5 <= column_skew <= 0.5:
+                    df[column].fillna(df[column].mean(), inplace=True)
+                else:
+                    df[column].fillna(df[column].median(), inplace=True)
+        else:
+            df.drop(columns=[column], inplace=True)
+    df.dropna(inplace=True)
     return df
 
+#Save Plots to Device
 def save_plot(plot_func, df, filename):
     plot_func(df)
     path = os.path.join(UPLOAD_FOLDER, filename)
@@ -60,7 +72,7 @@ def save_plot(plot_func, df, filename):
     plt.close()
     return path
 
-# Routes
+#Upload Route
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -74,6 +86,7 @@ def upload_file():
     file.save(file_path)
     return jsonify({'message': 'File uploaded successfully', 'file_path': file_path}), 200
 
+#Clean Route
 @app.route('/clean', methods=['POST'])
 def clean_data():
     file_path = request.json.get('file_path')
@@ -86,6 +99,7 @@ def clean_data():
     cleaned_df.to_csv(cleaned_path, index=False)
     return jsonify({'message': 'Data cleaned', 'file_path': cleaned_path}), 200
 
+#Feature Engineer Route
 @app.route('/feature_engineering', methods=['POST'])
 def feature_engineering():
     file_path = request.json.get('file_path')
@@ -114,6 +128,7 @@ def feature_engineering():
     except json.JSONDecodeError as e:
         return jsonify({'error': f'Error parsing JSON: {e}'}), 500
 
+#Data Exploration Route
 @app.route('/explore', methods=['POST'])
 def explore_data():
     file_path = request.json.get('file_path')
@@ -121,13 +136,37 @@ def explore_data():
         return jsonify({'error': 'File not found'}), 404
 
     df = pd.read_csv(file_path)
-    plot_paths = {
-        'histograms': save_plot(lambda df: df.hist(bins=20, figsize=(14, 10)), df, 'histograms.png'),
-        'correlation_matrix': save_plot(lambda df: sns.heatmap(df.corr(), annot=True, cmap='coolwarm'), df, 'correlation_matrix.png'),
-        'pairplot': save_plot(lambda df: sns.pairplot(df.select_dtypes(include=['number'])), df, 'pairplot.png'),
-    }
+    plot_paths = {}
+
+    # Histograms
+    try:
+        plot_paths['histograms'] = save_plot(lambda df: df.hist(bins=20, figsize=(14, 10)), df, 'histograms.png')
+    except Exception as e:
+        return jsonify({'error': f'Error generating histograms: {e}'}), 500
+
+    # Correlation Matrix
+    try:
+        correlation_matrix = df.corr()
+        if correlation_matrix.empty:
+            plot_paths['correlation_matrix'] = None
+        else:
+            plot_paths['correlation_matrix'] = save_plot(lambda df: sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm'), df, 'correlation_matrix.png')
+    except Exception as e:
+        return jsonify({'error': f'Error generating correlation matrix: {e}'}), 500
+
+    # Pairplot
+    try:
+        sns.pairplot(df.select_dtypes(include=['number']))
+        pairplot_path = os.path.join(UPLOAD_FOLDER, 'pairplot.png')
+        plt.savefig(pairplot_path)
+        plt.close()
+        plot_paths['pairplot'] = pairplot_path
+    except Exception as e:
+        return jsonify({'error': f'Error generating pairplot: {e}'}), 500
+
     return jsonify({'message': 'Exploration complete', 'plots': plot_paths}), 200
 
+#Download Route
 @app.route('/download', methods=['GET'])
 def download_file():
     file_path = request.args.get('file_path')
